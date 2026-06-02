@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#ffffff">
+    <title>透析室申し送りデモ</title>
+    <link rel="stylesheet" href="style.css">
+  </head>
+  <body>
+    <header class="app-header">
+      <div>
+        <p class="eyebrow">サンプルデータのみで動作するデモ</p>
+        <h1>透析室申し送り</h1>
+      </div>
+      <div class="header-note" aria-label="デモ表示">
+        <span class="demo-badge">DEMO</span>
+        <span>実患者情報は入力しないでください</span>
+      </div>
+    </header>
+
+    <nav class="main-nav" aria-label="画面切り替え">
+      <button class="nav-button active" type="button" data-view="morning">朝会モード</button>
+      <button class="nav-button" type="button" data-view="entry">入力モード</button>
+      <button class="nav-button" type="button" data-view="history">患者履歴</button>
+      <button class="nav-button" type="button" data-view="settings">設定・データ管理</button>
+    </nav>
+
+    <main>
+      <section id="morning-view" class="view active" aria-labelledby="morning-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">朝会モード</p>
+            <h2 id="morning-title">朝会対象の申し送り</h2>
+          </div>
+          <div class="morning-summary">
+            <div><strong id="target-count">0</strong><span>対象患者</span></div>
+            <div><strong id="current-position">0 / 0</strong><span>現在位置</span></div>
+          </div>
+        </div>
+
+        <div class="morning-toolbar">
+          <div class="filter-group" aria-label="朝会フィルター">
+            <button class="filter-chip active" type="button" data-morning-filter="all">すべて</button>
+            <button class="filter-chip status-new" type="button" data-morning-filter="新規">新規</button>
+            <button class="filter-chip status-last" type="button" data-morning-filter="ラスト">ラスト</button>
+            <button class="filter-chip status-skip" type="button" data-morning-filter="スキップ">スキップ</button>
+          </div>
+          <button id="toggle-list" class="secondary-button" type="button" aria-pressed="false">一覧表示に切り替え</button>
+        </div>
+
+        <div id="morning-card-container" aria-live="polite"></div>
+        <div class="morning-actions">
+          <button id="prev-patient" class="large-button secondary-button" type="button">← 前の患者</button>
+          <button id="next-patient" class="large-button primary-button" type="button">次の患者 →</button>
+        </div>
+      </section>
+
+      <section id="entry-view" class="view" aria-labelledby="entry-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">入力モード</p>
+            <h2 id="entry-title">申し送りを登録</h2>
+          </div>
+          <p class="section-help">姓と名を分けて入力します。未登録の氏名は新規患者として登録されます。</p>
+        </div>
+
+        <form id="record-form" class="form-card">
+          <div class="form-grid">
+            <label class="field">
+              <span>姓 <b>必須</b></span>
+              <input id="patient-family-name" name="patientFamilyName" list="patient-family-candidates" autocomplete="off" required placeholder="例：佐藤">
+              <datalist id="patient-family-candidates"></datalist>
+            </label>
+
+            <label class="field">
+              <span>名 <b>必須</b></span>
+              <input id="patient-given-name" name="patientGivenName" list="patient-given-candidates" autocomplete="off" required placeholder="例：太郎">
+              <datalist id="patient-given-candidates"></datalist>
+              <small id="patient-name-hint">登録済み患者を入力すると候補が表示されます。</small>
+            </label>
+
+            <label class="field">
+              <span>透析種別</span>
+              <select id="dialysis-type" name="dialysisType"></select>
+            </label>
+
+            <label id="dialysis-other-field" class="field hidden">
+              <span>その他の透析種別 <b>必須</b></span>
+              <input id="dialysis-type-other" name="dialysisTypeOther" placeholder="例：臨時の透析種別を入力">
+              <small>選択肢にない透析種別を手動で入力してください。</small>
+            </label>
+
+            <label class="field">
+              <span>区分</span>
+              <select id="category" name="category"></select>
+            </label>
+
+            <label class="field">
+              <span>重要度</span>
+              <select id="importance" name="importance"></select>
+            </label>
+
+          </div>
+
+          <fieldset class="tag-fieldset">
+            <legend>タグ</legend>
+            <div id="tag-options" class="checkbox-grid"></div>
+          </fieldset>
+
+          <div class="field">
+            <span>申し送り本文 <b>必須</b></span>
+            <div class="text-editor-toolbar" aria-label="選択範囲の文字色">
+              <span>文字を選択して色を指定</span>
+              <button class="color-button color-black" type="button" data-editor-color="black">黒</button>
+              <button class="color-button color-red" type="button" data-editor-color="red">赤</button>
+              <button class="color-button color-orange" type="button" data-editor-color="orange">オレンジ</button>
+              <button class="color-button color-blue" type="button" data-editor-color="blue">青</button>
+              <button class="color-button color-green" type="button" data-editor-color="green">緑</button>
+            </div>
+            <textarea id="handover-text" class="text-editor" name="handoverText" rows="6" required placeholder="治療中の経過、注意点、次回の確認事項などを入力"></textarea>
+            <small>強調したい部分だけを選択し、上の色ボタンを押してください。色付きプレビューは下に表示されます。</small>
+            <div class="text-preview">
+              <span>色付きプレビュー</span>
+              <p id="handover-preview">本文を入力すると、ここにプレビューが表示されます。</p>
+            </div>
+          </div>
+
+          <label class="field">
+            <span>次回確認</span>
+            <textarea id="next-check" name="nextCheck" rows="3" placeholder="次回治療時に確認する内容"></textarea>
+          </label>
+
+          <label class="check-row">
+            <input id="add-ongoing" name="addOngoing" type="checkbox">
+            <span>この申し送りを「継続注意」に追加する</span>
+          </label>
+          <p class="field-note">継続注意に追加すると、次回以降の朝会カードにも注意事項として残り、継続して確認できます。</p>
+
+          <div class="form-actions">
+            <button class="primary-button large-button" type="submit">ブラウザ内に保存</button>
+            <span id="save-message" class="save-message" role="status"></span>
+          </div>
+        </form>
+      </section>
+
+      <section id="history-view" class="view" aria-labelledby="history-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">患者履歴モード</p>
+            <h2 id="history-title">患者別の全治療歴</h2>
+          </div>
+          <p class="section-help">履歴本文は省略せず、全文を表示します。</p>
+        </div>
+
+        <div class="history-layout">
+          <aside class="patient-sidebar">
+            <h3>患者一覧</h3>
+            <label class="field compact">
+              <span>患者名検索</span>
+              <input id="history-name-search" type="search" placeholder="患者名で検索">
+            </label>
+            <label class="field compact">
+              <span>タグ検索</span>
+              <select id="history-tag-search">
+                <option value="">すべてのタグ</option>
+              </select>
+            </label>
+            <label class="field compact">
+              <span>重要度検索</span>
+              <select id="history-importance-search"></select>
+            </label>
+            <div id="history-patient-list" class="patient-list" aria-label="患者一覧"></div>
+          </aside>
+          <div id="history-detail" class="history-detail"></div>
+        </div>
+      </section>
+
+      <section id="settings-view" class="view" aria-labelledby="settings-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">設定・データ管理</p>
+            <h2 id="settings-title">ブラウザ内データ</h2>
+          </div>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card"><strong id="patient-count">0</strong><span>患者件数</span></div>
+          <div class="stat-card"><strong id="record-count">0</strong><span>履歴件数</span></div>
+          <div class="stat-card"><strong id="last-updated">-</strong><span>最終更新</span></div>
+        </div>
+
+        <div class="management-card">
+          <h3>データ操作</h3>
+          <p>データはこのブラウザの <code>localStorage</code> に保存されます。実患者情報を入力しないでください。</p>
+          <div class="management-actions">
+            <button id="reset-sample" class="secondary-button" type="button">サンプルデータを初期化</button>
+            <button id="export-json" class="secondary-button" type="button">全データをJSONでエクスポート</button>
+            <label class="file-button secondary-button">
+              JSONファイルをインポート
+              <input id="import-json" type="file" accept="application/json,.json">
+            </label>
+            <button id="delete-all" class="danger-button" type="button">全データ削除</button>
+          </div>
+          <p id="management-message" class="save-message" role="status"></p>
+        </div>
+
+        <div class="management-card master-card">
+          <h3>入力項目の設定</h3>
+          <p>各項目を1行に1つずつ入力してください。保存すると入力モードへ反映されます。</p>
+          <div class="settings-tabs" role="tablist" aria-label="入力項目設定">
+            <button class="settings-tab active" type="button" role="tab" aria-selected="true" data-settings-tab="dialysisTypes">透析種別</button>
+            <button class="settings-tab" type="button" role="tab" aria-selected="false" data-settings-tab="categories">区分</button>
+            <button class="settings-tab" type="button" role="tab" aria-selected="false" data-settings-tab="importanceLevels">重要度</button>
+            <button class="settings-tab" type="button" role="tab" aria-selected="false" data-settings-tab="tags">タグ</button>
+          </div>
+          <div class="settings-panel">
+            <label class="field">
+              <span id="settings-list-label">透析種別</span>
+              <textarea id="settings-list-editor" rows="9"></textarea>
+            </label>
+            <p id="settings-list-help" class="field-note">「その他」を残すと、入力モードで自由入力欄を利用できます。</p>
+            <button id="save-master-settings" class="primary-button" type="button">入力項目の設定を保存</button>
+            <span id="settings-message" class="save-message" role="status"></span>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <template id="empty-state-template">
+      <div class="empty-state">
+        <h3>該当するデータがありません</h3>
+        <p>フィルターを変更するか、入力モードから申し送りを登録してください。</p>
+      </div>
+    </template>
+
+    <script src="script.js"></script>
+  </body>
+</html>
