@@ -21,6 +21,7 @@ let morningListMode = false;
 let selectedHistoryPatientId = "";
 let draftContent = [];
 let activeSettingsTab = "dialysisTypes";
+let editingRecordId = "";
 
 function formatDate(date) {
   const d = new Date(date);
@@ -261,13 +262,17 @@ function renderContent(record, className = "") {
 function renderRecord(record, options = {}) {
   const showCategory = options.showCategory !== false;
   const extraClass = options.extraClass || "";
+  const showEdit = options.showEdit === true;
   return `
     <article class="record-item ${escapeHtml(extraClass)}">
-      <div class="record-meta">
-        <span>${escapeHtml(formatDateTime(record.recordedAt))}</span>
-        <span>${escapeHtml(record.dialysisType)}</span>
-        ${showCategory ? `<span class="badge ${categoryClass(record.category)}">${escapeHtml(record.category)}</span>` : ""}
-        <span class="badge ${IMPORTANT_LEVELS.includes(record.importance) ? "important" : ""}">重要度：${escapeHtml(record.importance)}</span>
+      <div class="record-heading">
+        <div class="record-meta">
+          <span>${escapeHtml(formatDateTime(record.recordedAt))}</span>
+          <span>${escapeHtml(record.dialysisType)}</span>
+          ${showCategory ? `<span class="badge ${categoryClass(record.category)}">${escapeHtml(record.category)}</span>` : ""}
+          <span class="badge ${IMPORTANT_LEVELS.includes(record.importance) ? "important" : ""}">重要度：${escapeHtml(record.importance)}</span>
+        </div>
+        ${showEdit ? `<button class="edit-button secondary-button" type="button" data-edit-record="${escapeHtml(record.id)}">編集</button>` : ""}
       </div>
       ${renderTags(record.tags)}
       ${renderContent(record)}
@@ -297,6 +302,7 @@ function renderPatientCard(patient) {
       <div class="patient-card-body">
         <section class="info-block latest-panel">
           <h4>前回の申し送り</h4>
+          <button class="edit-button secondary-button" type="button" data-edit-record="${escapeHtml(latest.id)}">この申し送りを編集</button>
           ${renderTags(latest.tags)}
           ${renderContent(latest, "latest-text")}
           ${latest.nextCheck ? `<p class="next-check"><strong>次回確認：</strong>${escapeHtml(latest.nextCheck)}</p>` : ""}
@@ -367,6 +373,34 @@ function renderEntryOptions() {
       <span>${escapeHtml(tag)}</span>
     </label>`).join("");
   updateDialysisOtherVisibility();
+}
+
+function renderEntryRecords() {
+  const records = appData.records.slice()
+    .sort((a, b) => new Date(b.recordedAt) - new Date(a.recordedAt));
+  document.querySelector("#entry-record-list").innerHTML = records.length
+    ? records.map((record) => {
+      const patient = patientById(record.patientId);
+      return `
+        <article class="record-item">
+          <div class="record-heading">
+            <div>
+              <h4>${escapeHtml(patient ? patientDisplayName(patient) : "患者不明")}</h4>
+              <div class="record-meta">
+                <span>${escapeHtml(formatDateTime(record.recordedAt))}</span>
+                <span>${escapeHtml(record.dialysisType)}</span>
+                <span class="badge ${categoryClass(record.category)}">${escapeHtml(record.category)}</span>
+                <span class="badge ${IMPORTANT_LEVELS.includes(record.importance) ? "important" : ""}">重要度：${escapeHtml(record.importance)}</span>
+              </div>
+            </div>
+            <button class="edit-button secondary-button" type="button" data-edit-record="${escapeHtml(record.id)}">編集</button>
+          </div>
+          ${renderTags(record.tags)}
+          ${renderContent(record)}
+          ${record.nextCheck ? `<p class="next-check"><strong>次回確認：</strong>${escapeHtml(record.nextCheck)}</p>` : ""}
+        </article>`;
+    }).join("")
+    : emptyState();
 }
 
 function historyFilteredPatients() {
@@ -466,8 +500,64 @@ function updatePatientHint() {
 function renderAll() {
   renderMorning();
   renderEntryOptions();
+  renderEntryRecords();
   renderHistory();
   renderSettings();
+}
+
+function switchView(viewName) {
+  document.querySelectorAll(".nav-button").forEach((button) => {
+    button.classList.toggle("active", button.dataset.view === viewName);
+  });
+  document.querySelectorAll(".view").forEach((view) => view.classList.remove("active"));
+  document.querySelector(`#${viewName}-view`).classList.add("active");
+}
+
+function setFormMode(record = null) {
+  editingRecordId = record?.id || "";
+  document.querySelector("#form-mode-label").textContent = record
+    ? "登録済みの申し送りを編集中"
+    : "新しい申し送りを入力";
+  document.querySelector("#save-record").textContent = record
+    ? "変更内容を保存"
+    : "新しい申し送りを保存";
+  document.querySelector("#cancel-edit").classList.toggle("hidden", !record);
+}
+
+function startRecordEdit(recordId) {
+  const record = appData.records.find((item) => item.id === recordId);
+  if (!record) return;
+  const patient = patientById(record.patientId);
+  if (!patient) return;
+  switchView("entry");
+  setFormMode(record);
+  document.querySelector("#patient-family-name").value = patient.familyName;
+  document.querySelector("#patient-given-name").value = patient.givenName;
+  const isPreset = appData.settings.dialysisTypes.includes(record.dialysisType);
+  document.querySelector("#dialysis-type").value = isPreset ? record.dialysisType : "その他";
+  document.querySelector("#dialysis-type-other").value = isPreset ? "" : record.dialysisType;
+  updateDialysisOtherVisibility();
+  document.querySelector("#category").value = record.category;
+  document.querySelector("#importance").value = record.importance;
+  document.querySelectorAll('input[name="tags"]').forEach((input) => {
+    input.checked = record.tags.includes(input.value);
+  });
+  document.querySelector("#handover-text").value = record.text;
+  draftContent = normalizeRecord(record).content.map((run) => ({ ...run }));
+  renderDraftPreview();
+  document.querySelector("#next-check").value = record.nextCheck;
+  document.querySelector("#add-ongoing").checked = record.addToOngoing;
+  document.querySelector("#patient-name-hint").textContent = `登録済み患者です。透析種別：${patient.dialysisType}`;
+  setMessage("#save-message", "内容を修正して「変更内容を保存」を押してください。");
+  document.querySelector("#record-form").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function resetRecordForm() {
+  document.querySelector("#record-form").reset();
+  updateDialysisOtherVisibility();
+  draftContent = [];
+  renderDraftPreview();
+  setFormMode();
 }
 
 function emptyState() {
@@ -569,10 +659,7 @@ function applyDraftColor(color) {
 
 document.querySelectorAll(".nav-button").forEach((button) => {
   button.addEventListener("click", () => {
-    document.querySelectorAll(".nav-button").forEach((item) => item.classList.remove("active"));
-    document.querySelectorAll(".view").forEach((view) => view.classList.remove("active"));
-    button.classList.add("active");
-    document.querySelector(`#${button.dataset.view}-view`).classList.add("active");
+    switchView(button.dataset.view);
   });
 });
 
@@ -601,6 +688,17 @@ document.querySelector("#next-patient").addEventListener("click", () => {
 document.querySelector("#toggle-list").addEventListener("click", () => {
   morningListMode = !morningListMode;
   renderMorning();
+});
+
+document.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-edit-record]");
+  if (!button) return;
+  startRecordEdit(button.dataset.editRecord);
+});
+
+document.querySelector("#cancel-edit").addEventListener("click", () => {
+  resetRecordForm();
+  setMessage("#save-message", "編集を終了しました。新しい申し送りを入力できます。");
 });
 
 ["#patient-family-name", "#patient-given-name"].forEach((selector) => {
@@ -647,7 +745,7 @@ document.querySelector("#record-form").addEventListener("submit", (event) => {
     patient.dialysisType = dialysisType;
   }
 
-  appData.records.push({
+  const recordData = {
     id: createId("r"),
     patientId: patient.id,
     recordedAt: new Date().toISOString(),
@@ -660,14 +758,23 @@ document.querySelector("#record-form").addEventListener("submit", (event) => {
     textColor: "black",
     nextCheck: String(form.get("nextCheck")).trim(),
     addToOngoing: form.get("addOngoing") === "on"
-  });
+  };
 
+  if (editingRecordId) {
+    const recordIndex = appData.records.findIndex((record) => record.id === editingRecordId);
+    if (recordIndex >= 0) {
+      recordData.id = editingRecordId;
+      recordData.recordedAt = appData.records[recordIndex].recordedAt;
+      appData.records[recordIndex] = recordData;
+    }
+  } else {
+    appData.records.push(recordData);
+  }
+
+  const wasEditing = Boolean(editingRecordId);
   saveData();
-  event.currentTarget.reset();
-  updateDialysisOtherVisibility();
-  draftContent = [];
-  renderDraftPreview();
-  setMessage("#save-message", `${name} さんの申し送りを保存しました。`);
+  resetRecordForm();
+  setMessage("#save-message", `${name} さんの申し送りを${wasEditing ? "更新" : "保存"}しました。`);
 });
 
 ["#history-name-search", "#history-tag-search", "#history-importance-search"].forEach((selector) => {

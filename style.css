@@ -103,6 +103,9 @@ main { max-width: 1440px; margin: 0 auto; padding-top: 28px; padding-bottom: 42p
 .full-history .record-list { margin-top: 10px; }
 
 .form-card, .management-card { padding: clamp(18px, 3vw, 26px); }
+.form-mode-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; border-bottom: 1px solid var(--line); padding-bottom: 13px; }
+.form-mode-bar p { margin-bottom: 0; }
+.form-mode-bar strong { font-size: 1.2rem; }
 .form-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
 .full-width { grid-column: 1 / -1; }
 .field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 14px; }
@@ -125,6 +128,11 @@ textarea { resize: vertical; }
 .text-preview p { min-height: 28px; margin: 3px 0 0; white-space: pre-wrap; }
 .save-message { margin: 0; color: var(--green-text); font-weight: 800; }
 .field-note { margin: -8px 0 14px; color: var(--muted); font-size: .9rem; }
+.entry-records { margin-top: 24px; }
+.compact-heading { align-items: center; margin-bottom: 10px; }
+.compact-heading h3 { margin-bottom: 0; font-size: 1.45rem; }
+.record-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.edit-button { min-height: 38px; flex: 0 0 auto; padding: 5px 12px; }
 
 .history-layout { display: grid; grid-template-columns: minmax(235px, 290px) 1fr; gap: 16px; }
 .patient-sidebar, .history-detail { padding: 15px; }

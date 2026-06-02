@@ -31,7 +31,7 @@
         <div class="section-heading">
           <div>
             <p class="eyebrow">朝会モード</p>
-            <h2 id="morning-title">朝会対象の申し送り</h2>
+            <h2 id="morning-title">申し送り</h2>
           </div>
           <div class="morning-summary">
             <div><strong id="target-count">0</strong><span>対象患者</span></div>
@@ -66,6 +66,13 @@
         </div>
 
         <form id="record-form" class="form-card">
+          <div class="form-mode-bar">
+            <div>
+              <p class="eyebrow">登録状態</p>
+              <strong id="form-mode-label">新しい申し送りを入力</strong>
+            </div>
+            <button id="cancel-edit" class="secondary-button hidden" type="button">編集をやめる</button>
+          </div>
           <div class="form-grid">
             <label class="field">
               <span>姓 <b>必須</b></span>
@@ -138,10 +145,21 @@
           <p class="field-note">継続注意に追加すると、次回以降の朝会カードにも注意事項として残り、継続して確認できます。</p>
 
           <div class="form-actions">
-            <button class="primary-button large-button" type="submit">ブラウザ内に保存</button>
+            <button id="save-record" class="primary-button large-button" type="submit">新しい申し送りを保存</button>
             <span id="save-message" class="save-message" role="status"></span>
           </div>
         </form>
+
+        <section class="entry-records">
+          <div class="section-heading compact-heading">
+            <div>
+              <p class="eyebrow">登録済みデータ</p>
+              <h3>申し送り一覧</h3>
+            </div>
+            <p class="section-help">修正したい申し送りの「編集」を押してください。</p>
+          </div>
+          <div id="entry-record-list" class="record-list"></div>
+        </section>
       </section>
 
       <section id="history-view" class="view" aria-labelledby="history-title">
