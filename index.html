@@ -158,6 +158,23 @@
             </div>
             <p class="section-help">修正したい申し送りの「編集」を押してください。</p>
           </div>
+          <div class="entry-record-toolbar">
+            <div class="date-filter">
+              <span class="eyebrow">選択日</span>
+              <div class="date-filter-row">
+                <button id="entry-date-prev" class="secondary-button compact-button" type="button" aria-label="前日を表示">←</button>
+                <input id="entry-record-date" type="date" aria-label="申し送り一覧の日付">
+                <button id="entry-date-next" class="secondary-button compact-button" type="button" aria-label="翌日を表示">→</button>
+              </div>
+            </div>
+            <div class="entry-filter-group" aria-label="申し送り一覧の表示範囲">
+              <button class="entry-filter-chip active" type="button" data-entry-record-filter="today">今日</button>
+              <button class="entry-filter-chip" type="button" data-entry-record-filter="mwf">月・水・金クール</button>
+              <button class="entry-filter-chip" type="button" data-entry-record-filter="tts">火・木・土クール</button>
+              <button class="entry-filter-chip" type="button" data-entry-record-filter="all">全履歴</button>
+            </div>
+          </div>
+          <p id="entry-record-summary" class="record-summary"></p>
           <div id="entry-record-list" class="record-list"></div>
         </section>
       </section>

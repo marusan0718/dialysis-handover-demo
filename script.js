@@ -22,6 +22,8 @@ let selectedHistoryPatientId = "";
 let draftContent = [];
 let activeSettingsTab = "dialysisTypes";
 let editingRecordId = "";
+let entryRecordFilter = "today";
+let entryRecordDate = formatDate(new Date());
 
 function formatDate(date) {
   const d = new Date(date);
@@ -293,16 +295,18 @@ function renderPatientCard(patient) {
     <article class="patient-card">
       <header class="patient-card-header ${categoryClass(latest.category)}">
         <h3>${escapeHtml(patientDisplayName(patient))}</h3>
-        <div class="badge-row">
-          <span class="badge">${escapeHtml(latest.dialysisType)}</span>
-          <span class="badge ${categoryClass(latest.category)}">区分：${escapeHtml(latest.category)}</span>
-          <span class="badge ${IMPORTANT_LEVELS.includes(latest.importance) ? "important" : ""}">重要度：${escapeHtml(latest.importance)}</span>
+        <div class="patient-card-header-side">
+          <div class="badge-row">
+            <span class="badge">${escapeHtml(latest.dialysisType)}</span>
+            <span class="badge ${categoryClass(latest.category)}">区分：${escapeHtml(latest.category)}</span>
+            <span class="badge ${IMPORTANT_LEVELS.includes(latest.importance) ? "important" : ""}">重要度：${escapeHtml(latest.importance)}</span>
+          </div>
+          <button class="morning-edit-button secondary-button" type="button" data-edit-record="${escapeHtml(latest.id)}">編集</button>
         </div>
       </header>
       <div class="patient-card-body">
         <section class="info-block latest-panel">
           <h4>前回の申し送り</h4>
-          <button class="edit-button secondary-button" type="button" data-edit-record="${escapeHtml(latest.id)}">この申し送りを編集</button>
           ${renderTags(latest.tags)}
           ${renderContent(latest, "latest-text")}
           ${latest.nextCheck ? `<p class="next-check"><strong>次回確認：</strong>${escapeHtml(latest.nextCheck)}</p>` : ""}
@@ -376,8 +380,30 @@ function renderEntryOptions() {
 }
 
 function renderEntryRecords() {
-  const records = appData.records.slice()
+  const scheduleDays = {
+    mwf: new Set([1, 3, 5]),
+    tts: new Set([2, 4, 6])
+  };
+  const records = appData.records.filter((record) => {
+    if (entryRecordFilter === "all") return true;
+    if (scheduleDays[entryRecordFilter]) {
+      return scheduleDays[entryRecordFilter].has(new Date(record.recordedAt).getDay());
+    }
+    return formatDate(record.recordedAt) === entryRecordDate;
+  })
     .sort((a, b) => new Date(b.recordedAt) - new Date(a.recordedAt));
+  const summaries = {
+    today: `${entryRecordDate} の申し送り`,
+    date: `${entryRecordDate} の申し送り`,
+    mwf: "月・水・金クールの申し送り",
+    tts: "火・木・土クールの申し送り",
+    all: "全履歴"
+  };
+  document.querySelector("#entry-record-date").value = entryRecordDate;
+  document.querySelector("#entry-record-summary").textContent = `${summaries[entryRecordFilter]}：${records.length}件`;
+  document.querySelectorAll("[data-entry-record-filter]").forEach((button) => {
+    button.classList.toggle("active", button.dataset.entryRecordFilter === entryRecordFilter);
+  });
   document.querySelector("#entry-record-list").innerHTML = records.length
     ? records.map((record) => {
       const patient = patientById(record.patientId);
@@ -688,6 +714,31 @@ document.querySelector("#next-patient").addEventListener("click", () => {
 document.querySelector("#toggle-list").addEventListener("click", () => {
   morningListMode = !morningListMode;
   renderMorning();
+});
+
+document.querySelectorAll("[data-entry-record-filter]").forEach((button) => {
+  button.addEventListener("click", () => {
+    entryRecordFilter = button.dataset.entryRecordFilter;
+    if (entryRecordFilter === "today") entryRecordDate = formatDate(new Date());
+    renderEntryRecords();
+  });
+});
+
+document.querySelector("#entry-record-date").addEventListener("change", (event) => {
+  if (!event.target.value) return;
+  entryRecordDate = event.target.value;
+  entryRecordFilter = entryRecordDate === formatDate(new Date()) ? "today" : "date";
+  renderEntryRecords();
+});
+
+["#entry-date-prev", "#entry-date-next"].forEach((selector, index) => {
+  document.querySelector(selector).addEventListener("click", () => {
+    const date = new Date(`${entryRecordDate}T00:00:00`);
+    date.setDate(date.getDate() + (index === 0 ? -1 : 1));
+    entryRecordDate = formatDate(date);
+    entryRecordFilter = entryRecordDate === formatDate(new Date()) ? "today" : "date";
+    renderEntryRecords();
+  });
 });
 
 document.addEventListener("click", (event) => {
