@@ -1566,3 +1566,102 @@ textarea,
     align-items: flex-start;
   }
 }
+
+/* Final override: list mode is a single wide handover board. */
+#morning-view.list-layout .morning-board {
+  display: block;
+}
+
+#morning-view.list-layout .morning-patient-column,
+#morning-view.list-layout .morning-detail-column {
+  display: none;
+}
+
+#morning-view.list-layout .morning-list-column {
+  width: 100%;
+}
+
+#morning-view.list-layout .morning-list-column .board-column-title {
+  margin: 0 0 8px;
+  color: #111827;
+  font-size: 1rem;
+  letter-spacing: 0;
+}
+
+#morning-view.list-layout #morning-card-container {
+  display: block;
+  border-top: 1px solid #e5e7eb;
+  background: #fff;
+}
+
+#morning-view.list-layout .morning-board-item {
+  display: grid;
+  grid-template-columns: minmax(180px, 240px) minmax(280px, 1.05fr) minmax(320px, 1.3fr);
+  column-gap: 18px;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 10px 0;
+  background: #fff;
+}
+
+#morning-view.list-layout .morning-board-item-header {
+  display: grid;
+  grid-template-columns: 36px 1fr auto;
+  gap: 8px;
+  align-items: start;
+}
+
+#morning-view.list-layout .morning-board-item-header h3 {
+  margin: 0;
+  color: #111827;
+  font-size: 1.12rem;
+  line-height: 1.35;
+}
+
+#morning-view.list-layout .morning-record-section h4 {
+  margin: 0 0 3px;
+  color: #6b7280;
+  font-size: .76rem;
+  font-weight: 800;
+  letter-spacing: .04em;
+}
+
+#morning-view.list-layout .morning-board-text {
+  margin: 0;
+  color: #111827;
+  font-size: .9rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+#morning-view.list-layout .morning-board-text span {
+  color: inherit;
+}
+
+#morning-view.list-layout .morning-record-section > .morning-board-text::before {
+  content: "・";
+  color: #6b7280;
+  font-weight: 800;
+}
+
+#morning-view.list-layout .history-compact {
+  display: grid;
+  gap: 1px;
+}
+
+#morning-view.list-layout .history-date {
+  display: inline-block;
+  min-width: 5.8em;
+  color: #6b7280;
+  font-size: .82rem;
+}
+
+#morning-view.list-layout .muted-text {
+  color: #9ca3af;
+}
+
+@media (max-width: 1100px) {
+  #morning-view.list-layout .morning-board-item {
+    grid-template-columns: 1fr;
+    row-gap: 6px;
+  }
+}
