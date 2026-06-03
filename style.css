@@ -62,6 +62,7 @@ main { max-width: 1440px; margin: 0 auto; padding-top: 28px; padding-bottom: 42p
 .morning-summary strong, .stat-card strong { font-size: 1.55rem; line-height: 1.2; }
 .morning-summary span, .stat-card span { color: var(--muted); font-size: .76rem; font-weight: 700; }
 .filter-group, .badge-row, .tag-row, .management-actions, .form-actions { display: flex; flex-wrap: wrap; gap: 7px; }
+.morning-date-panel { display: flex; align-items: end; gap: 10px; margin-left: auto; }
 .filter-chip { min-height: 40px; padding: 6px 13px; }
 .filter-chip.active { border-color: var(--dark); box-shadow: inset 0 0 0 1px var(--dark); }
 .status-new { border-color: #ddb77e; background: var(--orange-bg); color: var(--orange-text); }
@@ -128,7 +129,7 @@ textarea { resize: vertical; }
 .text-preview p { min-height: 28px; margin: 3px 0 0; white-space: pre-wrap; }
 .save-message { margin: 0; color: var(--green-text); font-weight: 800; }
 .field-note { margin: -8px 0 14px; color: var(--muted); font-size: .9rem; }
-.entry-records { margin-top: 24px; }
+.entry-records, .entry-patient-history { margin-top: 24px; }
 .compact-heading { align-items: center; margin-bottom: 10px; }
 .compact-heading h3 { margin-bottom: 0; font-size: 1.45rem; }
 .entry-record-toolbar {
@@ -142,6 +143,19 @@ textarea { resize: vertical; }
 .entry-filter-chip { min-height: 40px; padding: 6px 11px; background: var(--surface); }
 .entry-filter-chip.active { border-color: var(--dark); background: var(--dark); color: #fff; }
 .record-summary { margin: 0 0 8px; color: var(--muted); font-size: .9rem; font-weight: 700; }
+.match-panel {
+  margin: 0 0 15px; border: 1px solid #d8c38f; border-radius: 10px; padding: 12px; background: #fff8e5;
+}
+.match-panel h4 { margin-bottom: 5px; }
+.match-panel p { margin-bottom: 8px; color: var(--muted); }
+.patient-choice-list { display: grid; gap: 8px; }
+.patient-choice {
+  display: flex; gap: 10px; align-items: flex-start; border: 1px solid var(--line); border-radius: 9px;
+  padding: 10px 12px; background: var(--surface); cursor: pointer;
+}
+.patient-choice input { width: 18px; height: 18px; margin-top: 4px; accent-color: var(--dark); }
+.patient-choice strong { display: block; font-size: 1.04rem; }
+.patient-choice small { display: block; color: var(--muted); }
 .record-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
 .edit-button { min-height: 38px; flex: 0 0 auto; padding: 5px 12px; }
 .patient-card-header-side { display: flex; flex-direction: column; align-items: flex-end; gap: 7px; }
@@ -176,6 +190,7 @@ textarea { resize: vertical; }
   .app-header, .section-heading, .morning-toolbar { align-items: stretch; flex-direction: column; }
   .header-note { align-items: flex-start; flex-direction: column; gap: 3px; }
   .morning-summary { display: grid; grid-template-columns: 1fr 1fr; }
+  .morning-date-panel { align-items: stretch; flex-direction: column; margin-left: 0; }
   .form-grid, .history-layout, .stats-grid { grid-template-columns: 1fr; }
   .patient-list { max-height: 230px; }
   .patient-card-header { align-items: flex-start; flex-direction: column; }

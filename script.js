@@ -24,10 +24,36 @@ let activeSettingsTab = "dialysisTypes";
 let editingRecordId = "";
 let entryRecordFilter = "today";
 let entryRecordDate = formatDate(new Date());
+let morningDate = formatDate(new Date());
+let morningSchedule = defaultScheduleForDate(morningDate);
+let selectedPatientId = "";
+let forceNewPatient = false;
+
+const SCHEDULE_DAYS = {
+  mwf: new Set([1, 3, 5]),
+  tts: new Set([2, 4, 6])
+};
 
 function formatDate(date) {
   const d = new Date(date);
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+function defaultScheduleForDate(dateString) {
+  const day = new Date(`${dateString}T00:00:00`).getDay();
+  return [2, 4, 6].includes(day) ? "tts" : "mwf";
+}
+
+function previousScheduleDate(dateString, schedule) {
+  const date = new Date(`${dateString}T00:00:00`);
+  do {
+    date.setDate(date.getDate() - 1);
+  } while (!SCHEDULE_DAYS[schedule].has(date.getDay()));
+  return formatDate(date);
+}
+
+function recordDate(record) {
+  return record.recordDate || formatDate(record.recordedAt);
 }
 
 function isoAtOffset(dayOffset, time = "08:30") {
@@ -46,7 +72,7 @@ function formatDateTime(value) {
 
 function createSampleData() {
   return {
-    schemaVersion: 3,
+    schemaVersion: 4,
     exportedAt: null,
     updatedAt: new Date().toISOString(),
     settings: structuredClone(DEFAULT_SETTINGS),
@@ -135,7 +161,7 @@ function normalizeData(data) {
     throw new Error("patients と records が必要です。");
   }
   return {
-    schemaVersion: Math.max(Number(data.schemaVersion) || 1, 3),
+    schemaVersion: Math.max(Number(data.schemaVersion) || 1, 4),
     exportedAt: data.exportedAt || null,
     updatedAt: data.updatedAt || new Date().toISOString(),
     settings: normalizeSettings(data.settings),
@@ -170,6 +196,8 @@ function patientDisplayName(patient) {
 
 function normalizeRecord(record) {
   const normalized = { tags: [], textColor: "black", nextCheck: "", addToOngoing: false, ...record };
+  normalized.recordDate = record.recordDate || formatDate(record.recordedAt || new Date());
+  normalized.updatedAt = record.updatedAt || record.recordedAt || new Date().toISOString();
   normalized.content = Array.isArray(record.content) && record.content.length
     ? record.content.map((run) => ({
       text: String(run.text || ""),
@@ -206,33 +234,30 @@ function optionHtml(values, selected = "") {
 function recordsForPatient(patientId) {
   return appData.records
     .filter((record) => record.patientId === patientId)
-    .sort((a, b) => new Date(b.recordedAt) - new Date(a.recordedAt));
+    .sort((a, b) => {
+      const dateDiff = new Date(`${recordDate(b)}T00:00:00`) - new Date(`${recordDate(a)}T00:00:00`);
+      return dateDiff || new Date(b.recordedAt) - new Date(a.recordedAt);
+    });
 }
 
-function yesterdayString() {
-  const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
-  return formatDate(yesterday);
-}
-
-function morningTargetDates() {
-  return new Set([yesterdayString(), formatDate(new Date())]);
+function morningTargetDate() {
+  return previousScheduleDate(morningDate, morningSchedule);
 }
 
 function morningPatients() {
-  const targetDates = morningTargetDates();
+  const targetDate = morningTargetDate();
   const patientIds = new Set(
     appData.records
-      .filter((record) => targetDates.has(formatDate(record.recordedAt)))
+      .filter((record) => recordDate(record) === targetDate)
       .map((record) => record.patientId)
   );
   return appData.patients.filter((patient) => patientIds.has(patient.id));
 }
 
 function latestMorningRecord(patientId) {
-  const targetDates = morningTargetDates();
+  const targetDate = morningTargetDate();
   return recordsForPatient(patientId)
-    .find((record) => targetDates.has(formatDate(record.recordedAt)));
+    .find((record) => recordDate(record) === targetDate);
 }
 
 function filteredMorningPatients() {
@@ -269,7 +294,8 @@ function renderRecord(record, options = {}) {
     <article class="record-item ${escapeHtml(extraClass)}">
       <div class="record-heading">
         <div class="record-meta">
-          <span>${escapeHtml(formatDateTime(record.recordedAt))}</span>
+          <span>対象日：${escapeHtml(recordDate(record))}</span>
+          <span>初回入力：${escapeHtml(formatDateTime(record.recordedAt))}</span>
           <span>${escapeHtml(record.dialysisType)}</span>
           ${showCategory ? `<span class="badge ${categoryClass(record.category)}">${escapeHtml(record.category)}</span>` : ""}
           <span class="badge ${IMPORTANT_LEVELS.includes(record.importance) ? "important" : ""}">重要度：${escapeHtml(record.importance)}</span>
@@ -287,7 +313,10 @@ function renderPatientCard(patient) {
   const allRecords = recordsForPatient(patient.id);
   const ongoing = allRecords.filter((record) => record.addToOngoing);
   if (!latest) return "";
-  const previousRecords = allRecords.filter((record) => new Date(record.recordedAt) < new Date(latest.recordedAt));
+  const previousRecords = allRecords.filter((record) => (
+    new Date(`${recordDate(record)}T00:00:00`) < new Date(`${recordDate(latest)}T00:00:00`)
+    || (recordDate(record) === recordDate(latest) && new Date(record.recordedAt) < new Date(latest.recordedAt))
+  ));
   const previous = previousRecords[0];
   const olderRecords = previousRecords.slice(1);
 
@@ -306,7 +335,7 @@ function renderPatientCard(patient) {
       </header>
       <div class="patient-card-body">
         <section class="info-block latest-panel">
-          <h4>前回の申し送り</h4>
+          <h4>前回の申し送り（${escapeHtml(recordDate(latest))}）</h4>
           ${renderTags(latest.tags)}
           ${renderContent(latest, "latest-text")}
           ${latest.nextCheck ? `<p class="next-check"><strong>次回確認：</strong>${escapeHtml(latest.nextCheck)}</p>` : ""}
@@ -335,6 +364,7 @@ function renderPatientCard(patient) {
 
 function renderMorning() {
   const patients = filteredMorningPatients();
+  const targetDate = morningTargetDate();
   morningIndex = Math.max(0, Math.min(morningIndex, patients.length - 1));
   document.querySelector("#target-count").textContent = String(morningPatients().length);
   document.querySelector("#current-position").textContent = patients.length
@@ -354,6 +384,12 @@ function renderMorning() {
   document.querySelector("#next-patient").disabled = !patients.length || morningListMode;
   document.querySelector("#toggle-list").textContent = morningListMode ? "1人表示に切り替え" : "一覧表示に切り替え";
   document.querySelector("#toggle-list").setAttribute("aria-pressed", String(morningListMode));
+  document.querySelector("#morning-date").value = morningDate;
+  document.querySelector("#morning-date-summary").textContent =
+    `朝会日 ${morningDate} / ${morningSchedule === "mwf" ? "月・水・金" : "火・木・土"}クールの前回透析日：${targetDate}`;
+  document.querySelectorAll("[data-morning-schedule]").forEach((button) => {
+    button.classList.toggle("active", button.dataset.morningSchedule === morningSchedule);
+  });
 }
 
 function renderEntryOptions() {
@@ -380,18 +416,17 @@ function renderEntryOptions() {
 }
 
 function renderEntryRecords() {
-  const scheduleDays = {
-    mwf: new Set([1, 3, 5]),
-    tts: new Set([2, 4, 6])
-  };
   const records = appData.records.filter((record) => {
     if (entryRecordFilter === "all") return true;
-    if (scheduleDays[entryRecordFilter]) {
-      return scheduleDays[entryRecordFilter].has(new Date(record.recordedAt).getDay());
+    if (SCHEDULE_DAYS[entryRecordFilter]) {
+      return SCHEDULE_DAYS[entryRecordFilter].has(new Date(`${recordDate(record)}T00:00:00`).getDay());
     }
-    return formatDate(record.recordedAt) === entryRecordDate;
+    return recordDate(record) === entryRecordDate;
   })
-    .sort((a, b) => new Date(b.recordedAt) - new Date(a.recordedAt));
+    .sort((a, b) => {
+      const dateDiff = new Date(`${recordDate(b)}T00:00:00`) - new Date(`${recordDate(a)}T00:00:00`);
+      return dateDiff || new Date(b.recordedAt) - new Date(a.recordedAt);
+    });
   const summaries = {
     today: `${entryRecordDate} の申し送り`,
     date: `${entryRecordDate} の申し送り`,
@@ -413,7 +448,8 @@ function renderEntryRecords() {
             <div>
               <h4>${escapeHtml(patient ? patientDisplayName(patient) : "患者不明")}</h4>
               <div class="record-meta">
-                <span>${escapeHtml(formatDateTime(record.recordedAt))}</span>
+                <span>対象日：${escapeHtml(recordDate(record))}</span>
+                <span>初回入力：${escapeHtml(formatDateTime(record.recordedAt))}</span>
                 <span>${escapeHtml(record.dialysisType)}</span>
                 <span class="badge ${categoryClass(record.category)}">${escapeHtml(record.category)}</span>
                 <span class="badge ${IMPORTANT_LEVELS.includes(record.importance) ? "important" : ""}">重要度：${escapeHtml(record.importance)}</span>
@@ -503,14 +539,89 @@ function selectedDialysisType(form) {
   return selected === "その他" ? String(form.get("dialysisTypeOther")).trim() : selected;
 }
 
-function findPatient(familyName, givenName) {
-  return appData.patients.find((patient) => patient.familyName === familyName && patient.givenName === givenName);
+function matchingPatients(familyName, givenName) {
+  if (!familyName) return [];
+  return appData.patients.filter((patient) => patient.familyName === familyName && patient.givenName === givenName);
+}
+
+function patientSummary(patient) {
+  const records = recordsForPatient(patient.id);
+  const latest = records[0];
+  return [
+    `識別ID：${patient.id}`,
+    `透析種別：${patient.dialysisType || "-"}`,
+    `記録：${records.length}件`,
+    latest ? `最終対象日：${recordDate(latest)}` : "記録なし"
+  ].join(" / ");
+}
+
+function selectedOrSuggestedPatient() {
+  if (forceNewPatient) return null;
+  const selected = patientById(selectedPatientId);
+  if (selected) return selected;
+  const familyName = document.querySelector("#patient-family-name").value.trim();
+  const givenName = document.querySelector("#patient-given-name").value.trim();
+  const matches = matchingPatients(familyName, givenName);
+  return matches.length === 1 ? matches[0] : null;
+}
+
+function renderPatientMatchPanel(matches) {
+  const panel = document.querySelector("#patient-match-panel");
+  if (!matches.length) {
+    panel.classList.add("hidden");
+    panel.innerHTML = "";
+    return;
+  }
+
+  const needsChoice = matches.length > 1;
+  panel.classList.remove("hidden");
+  panel.innerHTML = `
+    <h4>${needsChoice ? "同姓同名の患者候補があります" : "登録済み患者候補"}</h4>
+    <p>${needsChoice ? "取り違え防止のため、前回の患者か新規患者かを必ず選択してください。" : "通常はこの患者に追記します。別患者として登録することもできます。"}</p>
+    <div class="patient-choice-list">
+      ${matches.map((patient) => `
+        <label class="patient-choice">
+          <input type="radio" name="patientChoice" value="${escapeHtml(patient.id)}"${selectedPatientId === patient.id ? " checked" : ""}>
+          <span>
+            <strong>${escapeHtml(patientDisplayName(patient) || "氏名未設定")}</strong>
+            <small>${escapeHtml(patientSummary(patient))}</small>
+          </span>
+        </label>`).join("")}
+      <label class="patient-choice">
+        <input type="radio" name="patientChoice" value="__new__"${forceNewPatient ? " checked" : ""}>
+        <span>
+          <strong>別の新規患者として登録</strong>
+          <small>同姓同名、または名なしの別患者の場合はこちらを選びます。</small>
+        </span>
+      </label>
+    </div>`;
+}
+
+function renderEntryPatientHistory() {
+  const patient = selectedOrSuggestedPatient();
+  const container = document.querySelector("#entry-patient-history");
+  if (!patient) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <h3>患者を選択すると過去記録を表示します</h3>
+        <p>同姓同名の候補がある場合は、上の候補から患者を選んでください。</p>
+      </div>`;
+    return;
+  }
+  const records = recordsForPatient(patient.id);
+  container.innerHTML = records.length
+    ? records.map((record) => renderRecord(record)).join("")
+    : `<div class="empty-state"><h3>過去記録はありません</h3><p>${escapeHtml(patientDisplayName(patient))} さんの初回記録として保存できます。</p></div>`;
 }
 
 function updatePatientHint() {
   const familyName = document.querySelector("#patient-family-name").value.trim();
   const givenName = document.querySelector("#patient-given-name").value.trim();
-  const patient = findPatient(familyName, givenName);
+  const matches = matchingPatients(familyName, givenName);
+  if (!forceNewPatient && !matches.some((patient) => patient.id === selectedPatientId)) {
+    selectedPatientId = matches.length === 1 ? matches[0].id : "";
+  }
+  const patient = selectedOrSuggestedPatient();
   const hint = document.querySelector("#patient-name-hint");
   if (patient) {
     hint.textContent = `登録済み患者です。透析種別：${patient.dialysisType}`;
@@ -518,15 +629,20 @@ function updatePatientHint() {
     document.querySelector("#dialysis-type").value = isPreset ? patient.dialysisType : "その他";
     document.querySelector("#dialysis-type-other").value = isPreset ? "" : patient.dialysisType;
     updateDialysisOtherVisibility();
+  } else if (matches.length > 1) {
+    hint.textContent = "同姓同名の候補があります。下の候補から選択してください。";
   } else {
     hint.textContent = "未登録の患者名です。保存時に新規患者として登録されます。";
   }
+  renderPatientMatchPanel(matches);
+  renderEntryPatientHistory();
 }
 
 function renderAll() {
   renderMorning();
   renderEntryOptions();
   renderEntryRecords();
+  renderEntryPatientHistory();
   renderHistory();
   renderSettings();
 }
@@ -557,6 +673,9 @@ function startRecordEdit(recordId) {
   if (!patient) return;
   switchView("entry");
   setFormMode(record);
+  selectedPatientId = patient.id;
+  forceNewPatient = false;
+  document.querySelector("#record-date").value = recordDate(record);
   document.querySelector("#patient-family-name").value = patient.familyName;
   document.querySelector("#patient-given-name").value = patient.givenName;
   const isPreset = appData.settings.dialysisTypes.includes(record.dialysisType);
@@ -574,14 +693,22 @@ function startRecordEdit(recordId) {
   document.querySelector("#next-check").value = record.nextCheck;
   document.querySelector("#add-ongoing").checked = record.addToOngoing;
   document.querySelector("#patient-name-hint").textContent = `登録済み患者です。透析種別：${patient.dialysisType}`;
+  renderPatientMatchPanel(matchingPatients(patient.familyName, patient.givenName));
+  renderEntryPatientHistory();
   setMessage("#save-message", "内容を修正して「変更内容を保存」を押してください。");
   document.querySelector("#record-form").scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 function resetRecordForm() {
   document.querySelector("#record-form").reset();
+  document.querySelector("#record-date").value = formatDate(new Date());
   updateDialysisOtherVisibility();
   draftContent = [];
+  selectedPatientId = "";
+  forceNewPatient = false;
+  document.querySelector("#patient-name-hint").textContent = "登録済み患者を入力すると候補が表示されます。";
+  renderPatientMatchPanel([]);
+  renderEntryPatientHistory();
   renderDraftPreview();
   setFormMode();
 }
@@ -716,6 +843,22 @@ document.querySelector("#toggle-list").addEventListener("click", () => {
   renderMorning();
 });
 
+document.querySelector("#morning-date").addEventListener("change", (event) => {
+  if (!event.target.value) return;
+  morningDate = event.target.value;
+  morningSchedule = defaultScheduleForDate(morningDate);
+  morningIndex = 0;
+  renderMorning();
+});
+
+document.querySelectorAll("[data-morning-schedule]").forEach((button) => {
+  button.addEventListener("click", () => {
+    morningSchedule = button.dataset.morningSchedule;
+    morningIndex = 0;
+    renderMorning();
+  });
+});
+
 document.querySelectorAll("[data-entry-record-filter]").forEach((button) => {
   button.addEventListener("click", () => {
     entryRecordFilter = button.dataset.entryRecordFilter;
@@ -747,13 +890,24 @@ document.addEventListener("click", (event) => {
   startRecordEdit(button.dataset.editRecord);
 });
 
+document.querySelector("#patient-match-panel").addEventListener("change", (event) => {
+  if (event.target.name !== "patientChoice") return;
+  forceNewPatient = event.target.value === "__new__";
+  selectedPatientId = forceNewPatient ? "" : event.target.value;
+  updatePatientHint();
+});
+
 document.querySelector("#cancel-edit").addEventListener("click", () => {
   resetRecordForm();
   setMessage("#save-message", "編集を終了しました。新しい申し送りを入力できます。");
 });
 
 ["#patient-family-name", "#patient-given-name"].forEach((selector) => {
-  document.querySelector(selector).addEventListener("input", updatePatientHint);
+  document.querySelector(selector).addEventListener("input", () => {
+    selectedPatientId = "";
+    forceNewPatient = false;
+    updatePatientHint();
+  });
 });
 
 document.querySelector("#dialysis-type").addEventListener("change", updateDialysisOtherVisibility);
@@ -771,18 +925,26 @@ document.querySelectorAll("[data-editor-color]").forEach((button) => {
 document.querySelector("#record-form").addEventListener("submit", (event) => {
   event.preventDefault();
   const form = new FormData(event.currentTarget);
+  const targetDate = String(form.get("recordDate")).trim();
   const familyName = String(form.get("patientFamilyName")).trim();
   const givenName = String(form.get("patientGivenName")).trim();
-  const name = [familyName, givenName].filter(Boolean).join(" ");
+  const name = [familyName, givenName].filter(Boolean).join(" ") || familyName;
   const dialysisType = selectedDialysisType(form);
   const content = contentFromEditor();
   const text = content.map((run) => run.text).join("");
-  if (!familyName || !givenName || !dialysisType || !text) {
-    setMessage("#save-message", "姓、名、透析種別、申し送り本文を入力してください。", true);
+  if (!targetDate || !familyName || !dialysisType || !text) {
+    setMessage("#save-message", "対象日、姓、透析種別、申し送り本文を入力してください。", true);
     return;
   }
 
-  let patient = findPatient(familyName, givenName);
+  const matches = matchingPatients(familyName, givenName);
+  let patient = forceNewPatient ? null : patientById(selectedPatientId);
+  if (!patient && !forceNewPatient && matches.length === 1) patient = matches[0];
+  if (!patient && !forceNewPatient && matches.length > 1) {
+    setMessage("#save-message", "同姓同名の候補があります。前回の患者か新規患者かを選択してください。", true);
+    renderPatientMatchPanel(matches);
+    return;
+  }
   if (!patient) {
     patient = {
       id: createId("p"),
@@ -800,6 +962,8 @@ document.querySelector("#record-form").addEventListener("submit", (event) => {
     id: createId("r"),
     patientId: patient.id,
     recordedAt: new Date().toISOString(),
+    recordDate: targetDate,
+    updatedAt: new Date().toISOString(),
     dialysisType,
     category: String(form.get("category")),
     importance: String(form.get("importance")),
@@ -816,6 +980,7 @@ document.querySelector("#record-form").addEventListener("submit", (event) => {
     if (recordIndex >= 0) {
       recordData.id = editingRecordId;
       recordData.recordedAt = appData.records[recordIndex].recordedAt;
+      recordData.updatedAt = new Date().toISOString();
       appData.records[recordIndex] = recordData;
     }
   } else {
@@ -874,7 +1039,7 @@ document.querySelector("#import-json").addEventListener("change", async (event) 
 document.querySelector("#delete-all").addEventListener("click", () => {
   if (!window.confirm("全データを削除します。この操作は取り消せません。よろしいですか？")) return;
   appData = {
-    schemaVersion: 3, exportedAt: null, updatedAt: new Date().toISOString(),
+    schemaVersion: 4, exportedAt: null, updatedAt: new Date().toISOString(),
     settings: structuredClone(DEFAULT_SETTINGS), patients: [], records: []
   };
   saveData();
@@ -905,4 +1070,5 @@ document.querySelector("#save-master-settings").addEventListener("click", () => 
   setMessage("#settings-message", "入力項目の設定を保存しました。");
 });
 
+document.querySelector("#record-date").value = formatDate(new Date());
 renderAll();

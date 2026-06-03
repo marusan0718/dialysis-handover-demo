@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#ffffff">
     <title>透析室申し送りデモ</title>
-    <link rel="stylesheet" href="style.css?v=20260603-2">
+    <link rel="stylesheet" href="style.css?v=20260603-3">
   </head>
   <body>
     <header class="app-header">
@@ -46,8 +46,19 @@
             <button class="filter-chip status-last" type="button" data-morning-filter="ラスト">ラスト</button>
             <button class="filter-chip status-skip" type="button" data-morning-filter="スキップ">スキップ</button>
           </div>
+          <div class="morning-date-panel">
+            <label class="date-filter">
+              <span class="eyebrow">朝会日</span>
+              <input id="morning-date" type="date" aria-label="朝会日">
+            </label>
+            <div class="entry-filter-group" aria-label="朝会クール">
+              <button class="entry-filter-chip active" type="button" data-morning-schedule="mwf">月・水・金</button>
+              <button class="entry-filter-chip" type="button" data-morning-schedule="tts">火・木・土</button>
+            </div>
+          </div>
           <button id="toggle-list" class="secondary-button" type="button" aria-pressed="false">一覧表示に切り替え</button>
         </div>
+        <p id="morning-date-summary" class="record-summary"></p>
 
         <div id="morning-card-container" aria-live="polite"></div>
         <div class="morning-actions">
@@ -62,7 +73,7 @@
             <p class="eyebrow">入力モード</p>
             <h2 id="entry-title">申し送りを登録</h2>
           </div>
-          <p class="section-help">姓と名を分けて入力します。未登録の氏名は新規患者として登録されます。</p>
+          <p class="section-help">姓は必須、名は任意です。同姓同名がある場合は患者候補から選択します。</p>
         </div>
 
         <form id="record-form" class="form-card">
@@ -75,14 +86,20 @@
           </div>
           <div class="form-grid">
             <label class="field">
+              <span>対象日（初回入力日） <b>必須</b></span>
+              <input id="record-date" name="recordDate" type="date" required>
+              <small>編集しても自動では変わりません。必要なときだけ手動で変更します。</small>
+            </label>
+
+            <label class="field">
               <span>姓 <b>必須</b></span>
               <input id="patient-family-name" name="patientFamilyName" list="patient-family-candidates" autocomplete="off" required placeholder="例：佐藤">
               <datalist id="patient-family-candidates"></datalist>
             </label>
 
             <label class="field">
-              <span>名 <b>必須</b></span>
-              <input id="patient-given-name" name="patientGivenName" list="patient-given-candidates" autocomplete="off" required placeholder="例：太郎">
+              <span>名</span>
+              <input id="patient-given-name" name="patientGivenName" list="patient-given-candidates" autocomplete="off" placeholder="例：太郎">
               <datalist id="patient-given-candidates"></datalist>
               <small id="patient-name-hint">登録済み患者を入力すると候補が表示されます。</small>
             </label>
@@ -109,6 +126,8 @@
             </label>
 
           </div>
+
+          <div id="patient-match-panel" class="match-panel hidden"></div>
 
           <fieldset class="tag-fieldset">
             <legend>タグ</legend>
@@ -149,6 +168,16 @@
             <span id="save-message" class="save-message" role="status"></span>
           </div>
         </form>
+
+        <section class="entry-patient-history">
+          <div class="section-heading compact-heading">
+            <div>
+              <p class="eyebrow">入力中の確認</p>
+              <h3>選択患者の過去記録</h3>
+            </div>
+          </div>
+          <div id="entry-patient-history" class="record-list"></div>
+        </section>
 
         <section class="entry-records">
           <div class="section-heading compact-heading">
@@ -269,6 +298,6 @@
       </div>
     </template>
 
-    <script src="script.js?v=20260603-2"></script>
+    <script src="script.js?v=20260603-3"></script>
   </body>
 </html>
