@@ -365,7 +365,10 @@ function renderPatientCard(patient) {
 function renderMorning() {
   const patients = filteredMorningPatients();
   const targetDate = morningTargetDate();
+  const morningView = document.querySelector("#morning-view");
   morningIndex = Math.max(0, Math.min(morningIndex, patients.length - 1));
+  morningView.classList.toggle("list-layout", morningListMode);
+  morningView.classList.toggle("block-layout", !morningListMode);
   document.querySelector("#target-count").textContent = String(morningPatients().length);
   document.querySelector("#current-position").textContent = patients.length
     ? `${morningIndex + 1} / ${patients.length}`
@@ -382,8 +385,10 @@ function renderMorning() {
 
   document.querySelector("#prev-patient").disabled = !patients.length || morningListMode;
   document.querySelector("#next-patient").disabled = !patients.length || morningListMode;
-  document.querySelector("#toggle-list").textContent = morningListMode ? "1人表示に切り替え" : "一覧表示に切り替え";
-  document.querySelector("#toggle-list").setAttribute("aria-pressed", String(morningListMode));
+  document.querySelector("#toggle-list").classList.toggle("active", !morningListMode);
+  document.querySelector("#toggle-list").setAttribute("aria-pressed", String(!morningListMode));
+  document.querySelector("#morning-list-view").classList.toggle("active", morningListMode);
+  document.querySelector("#morning-list-view").setAttribute("aria-pressed", String(morningListMode));
   document.querySelector("#morning-date").value = morningDate;
   document.querySelector("#morning-date-summary").textContent =
     `朝会日 ${morningDate} / ${morningSchedule === "mwf" ? "月・水・金" : "火・木・土"}クールの前回透析日：${targetDate}`;
@@ -839,7 +844,12 @@ document.querySelector("#next-patient").addEventListener("click", () => {
 });
 
 document.querySelector("#toggle-list").addEventListener("click", () => {
-  morningListMode = !morningListMode;
+  morningListMode = false;
+  renderMorning();
+});
+
+document.querySelector("#morning-list-view").addEventListener("click", () => {
+  morningListMode = true;
   renderMorning();
 });
 

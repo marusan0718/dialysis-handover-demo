@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#ffffff">
     <title>透析室申し送りデモ</title>
-    <link rel="stylesheet" href="style.css?v=20260603-3">
+    <link rel="stylesheet" href="style.css?v=20260603-4">
   </head>
   <body>
     <header class="app-header">
@@ -56,7 +56,10 @@
               <button class="entry-filter-chip" type="button" data-morning-schedule="tts">火・木・土</button>
             </div>
           </div>
-          <button id="toggle-list" class="secondary-button" type="button" aria-pressed="false">一覧表示に切り替え</button>
+          <div class="view-toggle" aria-label="表示モード">
+            <button id="morning-list-view" class="view-toggle-button" type="button" aria-pressed="false">リスト表示</button>
+            <button id="toggle-list" class="view-toggle-button active" type="button" aria-pressed="true">ブロック表示</button>
+          </div>
         </div>
         <p id="morning-date-summary" class="record-summary"></p>
 
@@ -298,6 +301,6 @@
       </div>
     </template>
 
-    <script src="script.js?v=20260603-3"></script>
+    <script src="script.js?v=20260603-4"></script>
   </body>
 </html>
