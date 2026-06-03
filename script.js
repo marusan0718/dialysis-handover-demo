@@ -381,6 +381,35 @@ function renderMorningPatientList(patients) {
   }).join("");
 }
 
+function renderMorningBoardItem(patient, index) {
+  const latest = latestMorningRecord(patient.id) || recordsForPatient(patient.id)[0];
+  if (!latest) return "";
+  const previousRecords = recordsForPatient(patient.id)
+    .filter((record) => record.id !== latest.id)
+    .slice(0, 5);
+  return `
+    <article class="morning-board-item">
+      <header class="morning-board-item-header">
+        <span class="patient-number">${escapeHtml(String(index + 1).padStart(2, "0"))}</span>
+        <h3>${escapeHtml(patientDisplayName(patient))}</h3>
+        ${latest.category !== "通常" ? `<span class="mini-pill ${categoryClass(latest.category)}">${escapeHtml(latest.category)}</span>` : ""}
+      </header>
+      <section class="morning-record-section">
+        <h4>前回の記録</h4>
+        ${renderContent(latest, "morning-board-text")}
+        ${latest.nextCheck ? `<p class="morning-board-text"><strong>次回確認：</strong>${escapeHtml(latest.nextCheck)}</p>` : ""}
+      </section>
+      <section class="morning-record-section history-compact">
+        <h4>過去記録</h4>
+        ${previousRecords.length ? previousRecords.map((record) => `
+          <p class="morning-board-text">
+            <span class="history-date">${escapeHtml(formatDate(recordDate(record)))}</span>
+            ${escapeHtml(record.text)}
+          </p>`).join("") : `<p class="morning-board-text muted-text">過去記録はありません。</p>`}
+      </section>
+    </article>`;
+}
+
 function renderMorning() {
   const patients = filteredMorningPatients();
   const targetDate = morningTargetDate();
@@ -401,7 +430,7 @@ function renderMorning() {
     container.innerHTML = emptyState();
     detailPanel.innerHTML = emptyState();
   } else if (morningListMode) {
-    container.innerHTML = patients.map((patient) => renderPatientCard(patient)).join("");
+    container.innerHTML = patients.map((patient, index) => renderMorningBoardItem(patient, index)).join("");
     detailPanel.innerHTML = renderPatientCard(patients[morningIndex]);
   } else {
     container.innerHTML = renderPatientCard(patients[morningIndex]);
