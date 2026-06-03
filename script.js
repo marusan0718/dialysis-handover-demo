@@ -244,11 +244,15 @@ function morningTargetDate() {
   return previousScheduleDate(morningDate, morningSchedule);
 }
 
+function morningDisplayDates() {
+  return [morningTargetDate(), morningDate];
+}
+
 function morningPatients() {
-  const targetDate = morningTargetDate();
+  const targetDates = new Set(morningDisplayDates());
   const patientIds = new Set(
     appData.records
-      .filter((record) => recordDate(record) === targetDate)
+      .filter((record) => targetDates.has(recordDate(record)))
       .map((record) => record.patientId)
   );
   return appData.patients.filter((patient) => patientIds.has(patient.id));
@@ -256,8 +260,9 @@ function morningPatients() {
 
 function latestMorningRecord(patientId) {
   const targetDate = morningTargetDate();
-  return recordsForPatient(patientId)
-    .find((record) => recordDate(record) === targetDate);
+  const records = recordsForPatient(patientId);
+  return records.find((record) => recordDate(record) === targetDate)
+    || records.find((record) => recordDate(record) === morningDate);
 }
 
 function filteredMorningPatients() {
@@ -370,7 +375,7 @@ function renderMorningPatientList(patients) {
     return `
       <button class="morning-patient-row ${index === morningIndex ? "active" : ""}" type="button" data-morning-patient-index="${index}">
         <span class="patient-number">${escapeHtml(number)}</span>
-        <span class="morning-patient-name">${escapeHtml(patientDisplayName(patient))}</span>
+        <span class="morning-patient-name">${escapeHtml(patient.familyName || patientDisplayName(patient))}</span>
         ${record ? `<span class="mini-pill ${categoryClass(record.category)}">${escapeHtml(record.category)}</span>` : ""}
       </button>`;
   }).join("");

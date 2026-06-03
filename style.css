@@ -818,6 +818,335 @@ textarea,
   }
 }
 
+/* Quiet high-visibility morning board: compact list, simple detail. */
+#morning-view {
+  color: #111827;
+}
+
+#morning-view .app-like-hidden {
+  display: none;
+}
+
+#morning-view .section-heading {
+  margin-bottom: 8px;
+}
+
+#morning-view h2 {
+  font-size: 2rem;
+  letter-spacing: -.02em;
+}
+
+#morning-view .morning-summary {
+  gap: 8px;
+}
+
+#morning-view .morning-summary div {
+  min-width: 104px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 6px 10px;
+  background: #fff;
+}
+
+#morning-view .morning-summary strong {
+  font-size: 1.35rem;
+}
+
+#morning-view .morning-toolbar {
+  grid-template-columns: minmax(260px, 1fr) auto auto;
+  gap: 8px;
+  margin-bottom: 8px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 8px;
+  background: #fff;
+}
+
+#morning-view .filter-chip,
+#morning-view .entry-filter-chip,
+#morning-view .view-toggle-button {
+  min-height: 32px;
+  border-color: #e5e7eb;
+  padding: 4px 10px;
+  font-size: .82rem;
+}
+
+#morning-view .filter-chip.active,
+#morning-view .entry-filter-chip.active {
+  background: #111827;
+}
+
+#morning-view .date-filter-row input,
+#morning-view #morning-date {
+  min-height: 34px;
+  padding: 4px 8px;
+  font-size: .86rem;
+}
+
+#morning-view .view-toggle {
+  border-color: #e5e7eb;
+  background: #f3f4f6;
+}
+
+#morning-view .record-summary {
+  margin-bottom: 8px;
+  color: #6b7280;
+  font-size: .8rem;
+}
+
+.morning-board {
+  grid-template-columns: 250px minmax(560px, 1fr) 330px;
+  gap: 12px;
+}
+
+.board-column-title {
+  margin-bottom: 6px;
+  color: #6b7280;
+  font-size: .74rem;
+  font-weight: 800;
+}
+
+.morning-patient-list {
+  gap: 0;
+  border-top: 1px solid #e5e7eb;
+  background: #fff;
+}
+
+.morning-patient-row {
+  grid-template-columns: 34px 1fr auto;
+  min-height: 50px;
+  border: 0;
+  border-bottom: 1px solid #e5e7eb;
+  border-left: 4px solid transparent;
+  border-radius: 0;
+  padding: 6px 8px 6px 7px;
+  box-shadow: none;
+}
+
+.morning-patient-row.active {
+  border-left-color: #2563eb;
+  background: #eff6ff;
+}
+
+.patient-number {
+  color: #374151;
+  font-size: 1.25rem;
+}
+
+.morning-patient-name {
+  font-size: .96rem;
+  font-weight: 800;
+}
+
+.mini-pill,
+#morning-view .badge,
+#morning-view .tag {
+  min-height: 20px;
+  border-radius: 999px;
+  padding: 0 7px;
+  font-size: .68rem;
+}
+
+#morning-view .status-new {
+  border-color: #fed7aa;
+  background: #fff7ed;
+  color: #9a3412;
+}
+
+#morning-view .status-last {
+  border-color: #bbf7d0;
+  background: #f0fdf4;
+  color: #166534;
+}
+
+#morning-view .status-skip {
+  border-color: #bae6fd;
+  background: #f0f9ff;
+  color: #0369a1;
+}
+
+#morning-view .badge.important {
+  border-color: #fecaca;
+  background: #fff1f2;
+  color: #9f1239;
+}
+
+#morning-view.list-layout #morning-card-container {
+  display: grid;
+  gap: 0;
+  border-top: 1px solid #e5e7eb;
+  background: #fff;
+}
+
+#morning-view.list-layout .morning-list-column .patient-card {
+  border: 0;
+  border-bottom: 1px solid #e5e7eb;
+  border-radius: 0;
+  background: #fff;
+  box-shadow: none;
+}
+
+#morning-view.list-layout .morning-list-column .patient-card-header {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  gap: 10px;
+  padding: 9px 8px 0;
+}
+
+#morning-view.list-layout .morning-list-column .patient-card-header h3 {
+  margin: 0;
+  font-size: 1.12rem;
+  line-height: 1.25;
+}
+
+#morning-view.list-layout .morning-list-column .patient-card-header-side {
+  align-items: flex-start;
+  gap: 3px;
+}
+
+#morning-view.list-layout .morning-list-column .patient-card-body {
+  padding: 0 8px 9px 198px;
+}
+
+#morning-view.list-layout .morning-list-column .latest-panel {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+}
+
+#morning-view.list-layout .morning-list-column .info-block h4 {
+  display: none;
+}
+
+#morning-view.list-layout .morning-list-column .tag-row {
+  display: none;
+}
+
+#morning-view.list-layout .morning-list-column .latest-text {
+  display: block;
+  overflow: visible;
+  margin: 0;
+  color: #111827;
+  font-size: .9rem;
+  font-weight: 500;
+  line-height: 1.55;
+  -webkit-line-clamp: unset;
+}
+
+#morning-view.list-layout .morning-list-column .latest-text::before {
+  content: "・";
+  color: #6b7280;
+  font-weight: 800;
+}
+
+#morning-view.list-layout .morning-list-column .next-check {
+  margin-top: 2px;
+  border-radius: 0;
+  padding: 0;
+  background: transparent;
+  color: #374151;
+  font-size: .82rem;
+}
+
+#morning-view.list-layout .morning-list-column .next-check::before {
+  content: "・";
+  color: #6b7280;
+  font-weight: 800;
+}
+
+#morning-view.list-layout .morning-list-column .morning-edit-button {
+  min-height: 24px;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: #9ca3af;
+  font-size: .72rem;
+}
+
+#morning-view.list-layout .morning-list-column .info-block:not(.latest-panel),
+#morning-view.list-layout .morning-list-column .full-history {
+  display: none;
+}
+
+.morning-detail-column {
+  border-left: 1px solid #e5e7eb;
+  padding-left: 12px;
+}
+
+.morning-detail-column .patient-card {
+  border: 0;
+  border-radius: 0;
+  background: #fff;
+  box-shadow: none;
+}
+
+.morning-detail-column .patient-card-header {
+  padding: 4px 0 8px;
+}
+
+.morning-detail-column .patient-card-header h3 {
+  font-size: 1.2rem;
+}
+
+.morning-detail-column .patient-card-body {
+  padding: 0;
+}
+
+.morning-detail-column .latest-panel {
+  border-bottom: 1px solid #e5e7eb;
+  border-radius: 0;
+  padding: 10px 0 12px;
+  background: #fff;
+}
+
+.morning-detail-column .latest-text {
+  font-size: .92rem;
+  line-height: 1.65;
+}
+
+.morning-detail-column .record-item,
+.morning-detail-column .ongoing-item {
+  border: 0;
+  border-bottom: 1px solid #e5e7eb;
+  border-radius: 0;
+  padding: 8px 0;
+}
+
+.morning-detail-column .record-meta {
+  margin-bottom: 2px;
+  font-size: .75rem;
+}
+
+.morning-detail-column .record-item p,
+.morning-detail-column .ongoing-item p {
+  font-size: .84rem;
+  line-height: 1.55;
+}
+
+#morning-view.block-layout .morning-list-column {
+  display: none;
+}
+
+#morning-view.block-layout .morning-board {
+  grid-template-columns: 250px minmax(520px, 1fr);
+}
+
+#morning-view.block-layout .morning-detail-column {
+  position: static;
+  border-left: 0;
+  padding-left: 0;
+}
+
+#morning-view.block-layout .morning-detail-column .patient-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 12px;
+}
+
+#morning-view .morning-actions {
+  display: none;
+}
+
 /* Dense whiteboard layout for morning use on PC monitors. */
 #morning-view {
   --board-gap: 12px;
