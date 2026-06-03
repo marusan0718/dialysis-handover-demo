@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#ffffff">
     <title>透析室申し送りデモ</title>
-    <link rel="stylesheet" href="style.css?v=20260603-4">
+    <link rel="stylesheet" href="style.css?v=20260603-5">
   </head>
   <body>
     <header class="app-header">
@@ -57,13 +57,26 @@
             </div>
           </div>
           <div class="view-toggle" aria-label="表示モード">
-            <button id="morning-list-view" class="view-toggle-button" type="button" aria-pressed="false">リスト表示</button>
-            <button id="toggle-list" class="view-toggle-button active" type="button" aria-pressed="true">ブロック表示</button>
+            <button id="morning-list-view" class="view-toggle-button" type="button" aria-pressed="false">一覧モード</button>
+            <button id="toggle-list" class="view-toggle-button active" type="button" aria-pressed="true">詳細モード</button>
           </div>
         </div>
         <p id="morning-date-summary" class="record-summary"></p>
 
-        <div id="morning-card-container" aria-live="polite"></div>
+        <div class="morning-board" aria-live="polite">
+          <aside class="morning-patient-column" aria-label="朝会患者一覧">
+            <div class="board-column-title">患者一覧</div>
+            <div id="morning-patient-list" class="morning-patient-list"></div>
+          </aside>
+          <section class="morning-list-column" aria-label="本日の申し送り一覧">
+            <div class="board-column-title">本日の申し送り一覧</div>
+            <div id="morning-card-container"></div>
+          </section>
+          <aside class="morning-detail-column" aria-label="詳細表示">
+            <div class="board-column-title">詳細表示</div>
+            <div id="morning-detail-panel"></div>
+          </aside>
+        </div>
         <div class="morning-actions">
           <button id="prev-patient" class="large-button secondary-button" type="button">← 前の患者</button>
           <button id="next-patient" class="large-button primary-button" type="button">次の患者 →</button>
@@ -301,6 +314,6 @@
       </div>
     </template>
 
-    <script src="script.js?v=20260603-4"></script>
+    <script src="script.js?v=20260603-5"></script>
   </body>
 </html>

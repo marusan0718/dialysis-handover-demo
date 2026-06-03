@@ -362,6 +362,20 @@ function renderPatientCard(patient) {
     </article>`;
 }
 
+function renderMorningPatientList(patients) {
+  if (!patients.length) return emptyState();
+  return patients.map((patient, index) => {
+    const record = latestMorningRecord(patient.id);
+    const number = String(index + 1).padStart(2, "0");
+    return `
+      <button class="morning-patient-row ${index === morningIndex ? "active" : ""}" type="button" data-morning-patient-index="${index}">
+        <span class="patient-number">${escapeHtml(number)}</span>
+        <span class="morning-patient-name">${escapeHtml(patientDisplayName(patient))}</span>
+        ${record ? `<span class="mini-pill ${categoryClass(record.category)}">${escapeHtml(record.category)}</span>` : ""}
+      </button>`;
+  }).join("");
+}
+
 function renderMorning() {
   const patients = filteredMorningPatients();
   const targetDate = morningTargetDate();
@@ -375,12 +389,18 @@ function renderMorning() {
     : "0 / 0";
 
   const container = document.querySelector("#morning-card-container");
+  const patientList = document.querySelector("#morning-patient-list");
+  const detailPanel = document.querySelector("#morning-detail-panel");
+  patientList.innerHTML = renderMorningPatientList(patients);
   if (!patients.length) {
     container.innerHTML = emptyState();
+    detailPanel.innerHTML = emptyState();
   } else if (morningListMode) {
     container.innerHTML = patients.map((patient) => renderPatientCard(patient)).join("");
+    detailPanel.innerHTML = renderPatientCard(patients[morningIndex]);
   } else {
     container.innerHTML = renderPatientCard(patients[morningIndex]);
+    detailPanel.innerHTML = renderPatientCard(patients[morningIndex]);
   }
 
   document.querySelector("#prev-patient").disabled = !patients.length || morningListMode;
@@ -850,6 +870,13 @@ document.querySelector("#toggle-list").addEventListener("click", () => {
 
 document.querySelector("#morning-list-view").addEventListener("click", () => {
   morningListMode = true;
+  renderMorning();
+});
+
+document.querySelector("#morning-patient-list").addEventListener("click", (event) => {
+  const button = event.target.closest("[data-morning-patient-index]");
+  if (!button) return;
+  morningIndex = Number(button.dataset.morningPatientIndex);
   renderMorning();
 });
 

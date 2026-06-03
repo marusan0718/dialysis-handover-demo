@@ -649,8 +649,8 @@ main {
   line-height: 1.9;
 }
 
-#morning-view.list-layout .info-block:not(.latest-panel),
-#morning-view.list-layout .full-history {
+#morning-view.list-layout .morning-list-column .info-block:not(.latest-panel),
+#morning-view.list-layout .morning-list-column .full-history {
   display: none;
 }
 
@@ -815,6 +815,302 @@ textarea,
   }
   #morning-view.list-layout .patient-card-header {
     grid-template-columns: 1fr;
+  }
+}
+
+/* Dense whiteboard layout for morning use on PC monitors. */
+#morning-view {
+  --board-gap: 12px;
+}
+
+#morning-view .section-heading {
+  margin-bottom: 12px;
+}
+
+#morning-view h2 {
+  font-size: clamp(1.8rem, 2.8vw, 2.45rem);
+}
+
+#morning-view .morning-summary div {
+  min-width: 118px;
+  border-radius: 14px;
+  padding: 8px 14px;
+  box-shadow: none;
+}
+
+#morning-view .morning-summary strong {
+  font-size: 1.55rem;
+}
+
+#morning-view .morning-toolbar {
+  display: grid;
+  grid-template-columns: minmax(330px, 1fr) auto auto;
+  gap: 10px;
+  margin-bottom: 10px;
+  border-radius: 16px;
+  padding: 10px;
+  box-shadow: none;
+}
+
+#morning-view .filter-chip,
+#morning-view .entry-filter-chip,
+#morning-view .view-toggle-button {
+  min-height: 36px;
+  padding: 6px 12px;
+  font-size: .9rem;
+}
+
+#morning-view .date-filter-row input,
+#morning-view #morning-date {
+  min-height: 38px;
+  padding: 6px 10px;
+  font-size: .92rem;
+}
+
+#morning-view .view-toggle {
+  align-self: end;
+}
+
+#morning-view .record-summary {
+  margin: 0 0 10px;
+  font-size: .86rem;
+}
+
+.morning-board {
+  display: grid;
+  grid-template-columns: 260px minmax(420px, 1fr) 360px;
+  gap: var(--board-gap);
+  align-items: start;
+}
+
+.morning-patient-column,
+.morning-list-column,
+.morning-detail-column {
+  min-width: 0;
+}
+
+.morning-patient-column,
+.morning-detail-column {
+  position: sticky;
+  top: 78px;
+}
+
+.board-column-title {
+  margin: 0 0 8px;
+  color: var(--muted);
+  font-size: .78rem;
+  font-weight: 800;
+  letter-spacing: .08em;
+}
+
+.morning-patient-list {
+  display: grid;
+  gap: 4px;
+}
+
+.morning-patient-row {
+  display: grid;
+  grid-template-columns: 34px 1fr auto;
+  gap: 8px;
+  align-items: center;
+  width: 100%;
+  min-height: 58px;
+  border: 1px solid transparent;
+  border-left: 4px solid transparent;
+  border-radius: 12px;
+  padding: 7px 9px 7px 8px;
+  background: #fff;
+  box-shadow: none;
+  text-align: left;
+}
+
+.morning-patient-row.active {
+  border-color: #dbeafe;
+  border-left-color: #3b82f6;
+  background: #eff6ff;
+}
+
+.patient-number {
+  color: #4b5563;
+  font-size: 1.35rem;
+  font-weight: 850;
+  letter-spacing: -.04em;
+}
+
+.morning-patient-name {
+  overflow: hidden;
+  font-size: .96rem;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mini-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 1px 8px;
+  font-size: .72rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+#morning-view.list-layout #morning-card-container {
+  gap: 8px;
+}
+
+#morning-view.list-layout .morning-list-column .patient-card {
+  min-height: 0;
+  border-radius: 12px;
+  box-shadow: none;
+}
+
+#morning-view.list-layout .morning-list-column .patient-card-header {
+  display: grid;
+  grid-template-columns: minmax(160px, 240px) 1fr;
+  gap: 10px;
+  padding: 10px 12px 2px;
+}
+
+#morning-view.list-layout .morning-list-column .patient-card-header h3 {
+  font-size: 1.12rem;
+  line-height: 1.35;
+}
+
+#morning-view.list-layout .morning-list-column .patient-card-body {
+  padding: 0 12px 10px;
+}
+
+#morning-view.list-layout .morning-list-column .patient-card-header-side {
+  align-items: flex-start;
+}
+
+#morning-view.list-layout .morning-list-column .badge,
+#morning-view.list-layout .morning-list-column .tag {
+  min-height: 22px;
+  padding: 0 7px;
+  font-size: .7rem;
+}
+
+#morning-view.list-layout .morning-list-column .morning-edit-button {
+  min-height: 28px;
+  padding: 2px 8px;
+  font-size: .72rem;
+}
+
+#morning-view.list-layout .morning-list-column .latest-panel {
+  padding: 4px 0 0;
+}
+
+#morning-view.list-layout .morning-list-column .info-block h4 {
+  margin-bottom: 4px;
+  font-size: .68rem;
+}
+
+#morning-view.list-layout .morning-list-column .tag-row {
+  gap: 4px;
+  margin-bottom: 3px;
+}
+
+#morning-view.list-layout .morning-list-column .latest-text {
+  display: -webkit-box;
+  overflow: hidden;
+  margin-top: 2px;
+  color: #111827;
+  font-size: .92rem;
+  font-weight: 500;
+  line-height: 1.55;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+#morning-view.list-layout .morning-list-column .next-check {
+  margin-top: 5px;
+  border-radius: 9px;
+  padding: 5px 8px;
+  font-size: .8rem;
+}
+
+.morning-detail-column .patient-card {
+  border-radius: 16px;
+  box-shadow: none;
+}
+
+.morning-detail-column .patient-card-header {
+  padding: 14px 16px 6px;
+}
+
+.morning-detail-column .patient-card-header h3 {
+  font-size: 1.35rem;
+}
+
+.morning-detail-column .patient-card-body {
+  padding: 6px 16px 16px;
+}
+
+.morning-detail-column .latest-panel {
+  padding: 14px;
+}
+
+.morning-detail-column .latest-text {
+  font-size: 1rem;
+  line-height: 1.8;
+}
+
+.morning-detail-column .record-item,
+.morning-detail-column .ongoing-item {
+  padding: 12px;
+}
+
+#morning-view.block-layout #morning-card-container .patient-card {
+  min-height: 0;
+}
+
+#morning-view.block-layout .morning-list-column #morning-card-container {
+  display: block;
+}
+
+#morning-view.block-layout .morning-list-column .patient-card {
+  box-shadow: none;
+}
+
+#morning-view.block-layout .morning-detail-column {
+  display: block;
+}
+
+#morning-view .morning-actions {
+  margin-left: 272px;
+  max-width: calc(100% - 272px - 372px);
+}
+
+@media (max-width: 1180px) {
+  .morning-board {
+    grid-template-columns: 230px minmax(360px, 1fr);
+  }
+  .morning-detail-column {
+    position: static;
+    grid-column: 1 / -1;
+  }
+  #morning-view .morning-actions {
+    margin-left: 0;
+    max-width: none;
+  }
+}
+
+@media (max-width: 820px) {
+  #morning-view .morning-toolbar {
+    grid-template-columns: 1fr;
+  }
+  .morning-board {
+    grid-template-columns: 1fr;
+  }
+  .morning-patient-column {
+    position: static;
+  }
+  .morning-patient-list {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   }
 }
 
